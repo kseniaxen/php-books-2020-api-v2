@@ -1,195 +1,165 @@
 <?php
-//Сущность Book
+// Сущность "Книга"
 class Book {
-
-    //уникальный id - будет генерироваться БД при вставке строки
-    protected $id;
-    //название диапазона времени
-    protected $updatedAt;
-    //название диапазона времени
-    protected $title;
-    //название диапазона времени
-    protected $author;
-    //название диапазона времени
-    protected $genre;
-    //название диапазона времени
-    protected $description;
-    //название диапазона времени
-    protected $countryId;
-    //название диапазона времени
-    protected $cityId;
-    //название диапазона времени
-    protected $typeId;
-    //название диапазона времени
-    protected $image;
-    //название диапазона времени
-    protected $active;
-
-    //Конструктор
-    function __construct(
-      $title
-      , $author
-      , $genre
-      , $description
-      , $countryId
-      , $cityId
-      , $typeId
-      , $image
-      , $active
-      , $id = 0
-      , $updatedAt = ''
-      ) {
-
-      $this->id = $id;
-      $this->updatedAt = $updatedAt;
-      $this->title = $title;
-      $this->author = $author;
-      $this->genre = $genre;
-      $this->description = $description;
-      $this->countryId = $countryId;
-      $this->cityId = $cityId;
-      $this->typeId = $typeId;
-      $this->image = $image;
-      $this->active = $active;
-    }
-
-    //object -> DB
-    //запись данных в БД
-    function intoDb() {
-      try {
-        //Получаем контекст для работы с БД
-        $pdo = getDbContext();
-        //Готовим sql-запрос добавления строки в таблицу ReceptionHours
-        $ps = $pdo->prepare("INSERT INTO `Books` (`title`, `author`, `genre`, `description`, `countryId`, `cityId`, `typeId`, `image`, `active`) VALUES (:title, :author, :genre, :description, :countryId, :cityId, :typeId, :image, :active)");
-        //Превращаем объект в массив
-        $ar = get_object_vars($this);
-        //Удаляем из него первые два элемента - id и created_at, потому что их создаст СУБД
-        array_shift($ar);
-        array_shift($ar);
-        //выполняем запрос к БД для добавления записи
-        $ps->execute($ar);
-      } catch (PDOException $e) {
-        $err = $e->getMessage();
-        if (substr($err, 0, strrpos($err, ":")) == 'SQLSTATE[23000]:Integrity constraint violation') {
-          return 1062;
-        } else {
-          return $e->getMessage();
-        }
+  // уникальный id - будет генерироваться БД при вставке строки
+  protected $id;
+  // временная метка последнего обновления
+  protected $updatedAt;
+  // заголовок
+  protected $title;
+  // автор
+  protected $author;
+  // жанр (опционально)
+  protected $genre;
+  // описание
+  protected $description;
+  // идентификатор страны предложения
+  protected $countryId;
+  // идентификатор города предложения
+  protected $cityId;
+  // идентификатор типа предложения
+  protected $typeId;
+  // изображение Base64 (опционально)
+  protected $image;
+  // активность (предложение доступно для запроса или по какой-либо причине скрыто от поиска)
+  protected $active;
+  // Конструктор
+  function __construct(
+    $title
+    , $author
+    , $genre
+    , $description
+    , $countryId
+    , $cityId
+    , $typeId
+    , $image
+    , $active
+    , $id = 0
+    , $updatedAt = ''
+    ) {
+    $this->id = $id;
+    $this->updatedAt = $updatedAt;
+    $this->title = $title;
+    $this->author = $author;
+    $this->genre = $genre;
+    $this->description = $description;
+    $this->countryId = $countryId;
+    $this->cityId = $cityId;
+    $this->typeId = $typeId;
+    $this->image = $image;
+    $this->active = $active;
+  }
+  // вставка строки о книге в БД
+  function create () {
+    try {
+      // Получаем контекст для работы с БД
+      $pdo = getDbContext();
+      // Готовим sql-запрос добавления строки в таблицу "Книги"
+      $ps = $pdo->prepare("INSERT INTO `Books` (`title`, `author`, `genre`, `description`, `countryId`, `cityId`, `typeId`, `image`, `active`) VALUES (:title, :author, :genre, :description, :countryId, :cityId, :typeId, :image, :active)");
+      // Превращаем объект в массив
+      $ar = get_object_vars($this);
+      // Удаляем из него первые два элемента - id и created_at, потому что их создаст СУБД
+      array_shift($ar);
+      array_shift($ar);
+      // Выполняем запрос к БД для добавления записи
+      $ps->execute($ar);
+    } catch (PDOException $e) {
+      // Если произошла ошибка - возвращаем ее текст
+      $err = $e->getMessage();
+      if (substr($err, 0, strrpos($err, ":")) == 'SQLSTATE[23000]:Integrity constraint violation') {
+        return 1062;
+      } else {
+        return $e->getMessage();
       }
     }
-
-    //DB -> object
-    //Чтение одного периода из БД (сейчас не используется, но может понадобиться в будущем)
-    /*static function fromDB($id) {
-
-        $Hour = null;
-
-        try {
-            //Получаем контекст для работы с БД
-            $pdo = getDbContext();
-            //Готовим sql-запрос чтения строки данных о периоде из таблицы Hour
-            $ps = $pdo->prepare("SELECT * FROM `ReceptionHours` WHERE id = ?");
-            
-            //Пытаемся выполнить запрос на получение данных
-            $resultCode = $ps->execute([$id]);
-            //Если получилось - записываем данные в объект
-            if ($resultCode) {
-                
-                $row = $ps->fetch();
-                $Hour =
-                    new Hour(
-                            $row['hours']
-                        );
-                return $Hour;
-            } else {
-                $pdo->errorInfo();
-                $pdo->errorCode();
-                return new Hour("");
-            }
-        } catch (PDOException $e) {
-            echo $e->getMessage();
-            return false;
-        }
-    }*/
-
-    //Получение списка всех периодов из БД
-    static function getBooks($lastId = 0, $take = 1) {
-        $ps = null;
-        $books = null;
-        try {
-            //Получаем контекст для работы с БД
-            $pdo = getDbContext();
-            //Готовим sql-запрос чтения всех строк данных о периодах из таблицы ReceptionHours
-            $ps = $pdo->prepare("SELECT * FROM `ReceptionHours`");
-            //Выполняем
-            $ps->execute();
-            //Сохраняем полученные данные в ассоциативный массив
-            $books = $ps->fetchAll();
-
-            return $books;
-        } catch (PDOException $e) {
-
-            echo $e->getMessage();
-            return false;
-        }
+  }
+  // Редактирование строки о книге по ее идентификатору
+  function edit() {
+    try {
+      // Удаляем старую версию строки из БД
+      Book::delete($this->id);
+      // Вставляем новую версию строки в БД
+      $this->create();
+    } catch (PDOException $e) {
+      $err = $e->getMessage();
+      if (substr($err, 0, strrpos($err, ":")) == 'SQLSTATE[23000]:Integrity constraint violation') {
+        return 1062;
+      } else {
+        return $e->getMessage();
+      }
     }
-
-    //Получение списка всех периодов из БД, для которых созданы строки заданий
-    //для указанных мастера и даты
-    /*static function GetAvailableHours($manicurist_id, $date) {
-
-        $ps = null;
-        $Hours = null;
-
-        try {
-            //Получаем контекст для работы с БД
-            $pdo = getDbContext();
-            //Готовим sql-запрос чтения всех строк данных о периодах из таблицы Hour,
-            //для указанных мастера и даты, еще не переведенных в состояние "забронировано" - статус заказа "1"
-            $ps = $pdo->prepare(
-                "SELECT `rh`.`id`, `rh`.`hours` FROM `Manicurist` AS `m` INNER JOIN `Order` AS `o` ON (`m`.`id` = `o`.`manicurist_id`) INNER JOIN `ReceptionHours` AS `rh` ON (`rh`.`id` = `o`.`desired_time_id`) WHERE `m`.`id` = ? AND `o`.`desired_date` = ? AND `o`.`status_id` = 1"
-                );
-
-            //Выполняем
-            $ps->execute([$manicurist_id, $date]);
-            //echo $ps->queryString;
-            //Сохраняем полученные данные в ассоциативный массив
-            $Hours = $ps->fetchAll();
-
-            return $Hours;
-        } catch (PDOException $e) {
-
-            echo $e->getMessage();
-            return false;
+  }
+  // Удаление строки книге из БД по идентификатору
+  function delete ($id) {
+    try {
+      // Получаем контекст для работы с БД
+      $pdo = getDbContext();
+      // Готовим sql-запрос удаления строки из таблицы "Книги"
+      $pdo->exec("DELETE FROM `Books` WHERE `id` = $id");
+    } catch (PDOException $e) {
+      $err = $e->getMessage();
+      if (substr($err, 0, strrpos($err, ":")) == 'SQLSTATE[23000]:Integrity constraint violation') {
+        return 1062;
+      } else {
+        return $e->getMessage();
+      }
+    }
+  }
+  // Получение списка всех книг из БД
+  static function filter($args) {
+    // Переменная для подготовленного запроса
+    $ps = null;
+    // Переменная для результата запроса
+    $books = null;
+    try {
+        // Получаем контекст для работы с БД
+        $pdo = getDbContext();
+        // Массив для условий запроса
+        $whereClouse = [];
+        // Сбор условий запроса в массив
+        if (isset($args['lastId'])) {
+          $whereClouse[] = "`b`.`id` < '{$args['lastId']}'";
         }
-    }*/
-
-    //Получение списка всех периодов из БД, для которых для указанных мастера и даты
-    //еще не созданы строки заданий
-    /*static function GetFreeHours($manicurist_id, $date) {
-
-        $ps = null;
-        $Hours = null;
-
-        try {
-            //Получаем контекст для работы с БД
-            $pdo = getDbContext();
-            //Готовим sql-запрос чтения
-            $ps = $pdo->prepare(
-                "SELECT `rh`.`id`, `rh`.`hours` FROM `ReceptionHours` AS `rh` WHERE NOT EXISTS(SELECT `rh`.`id` FROM `Manicurist`AS `m` INNER JOIN `Order` AS `o` ON (`m`.`id` = `o`.`manicurist_id`) WHERE `m`.`id` = ? AND `o`.`desired_date` = ? AND `rh`.`id` = `o`.`desired_time_id`);"
-                );
-
-            //Выполняем
-            $ps->execute([$manicurist_id, $date]);
-            //echo $ps->queryString;
-            //Сохраняем полученные данные в ассоциативный массив
-            $Hours = $ps->fetchAll();
-
-            return $Hours;
-        } catch (PDOException $e) {
-
-            echo $e->getMessage();
-            return false;
+        if (isset($args['active'])) {
+          $whereClouse[] = "`b`.`active` = '{$args['active']}'";
         }
-    }*/
+        if (isset($args['title'])) {
+          $whereClouse[] = "locate('{$args['title']}', `b`.`title`) > 0";
+        }
+        if (isset($args['author'])) {
+          $whereClouse[] = "locate('{$args['author']}', `b`.`author`) > 0";
+        }
+        if (isset($args['countryId'])) {
+          $whereClouse[] = "`b`.`countryId` = '{$args['countryId']}'";
+        }
+        if (isset($args['cityId'])) {
+          $whereClouse[] = "`b`.`cityId` = '{$args['cityId']}'";
+        }
+        if (isset($args['typeId'])) {
+          $whereClouse[] = "`b`.`typeId` = '{$args['typeId']}'";
+        }
+        $whereClouseString = 'WHERE ';
+        $expressionCount = 0;
+        foreach ($whereClouse as $expression) {
+          if ($expressionCount++ == 0) {
+            $whereClouseString .=  $expression;
+          } else {
+            $whereClouseString .= ' AND ' . $expression;
+          }
+        }
+        // Готовим sql-запрос чтения всех строк данных из таблицы "Книги"
+        // с подключением связанных таблиц "Страна", "Город", "Тип",
+        // сортируем по идентификаторам,
+        // пытаемся получить только три значения из строк, идентификаторы которых меньше заданного
+        $ps = $pdo->prepare("SELECT `b`.`id`, `b`.`updatedAt`, `b`.`title`, `b`.`author`, `b`.`genre`, `b`.`description`, `co`.`name`, `ci`.`name`, `ty`.`name`, `b`.`image`, `b`.`active` FROM `Books` AS `b` INNER JOIN `Country` AS `co` ON (`b`.`countryId` = `co`.`id`) INNER JOIN `City` AS `ci` ON (`b`.`cityId` = `ci`.`id`) INNER JOIN `Type` AS `ty` ON (`b`.`typeId` = `ty`.`id`) {$whereClouseString} ORDER BY `b`.`id` DESC LIMIT 3");
+        // Выполняем
+        $ps->execute();
+        //Сохраняем полученные данные в ассоциативный массив
+        $books = $ps->fetchAll();
+        return $books;
+    } catch (PDOException $e) {
+        echo $e->getMessage();
+        return false;
+    }
+  }
 }
