@@ -1,6 +1,7 @@
 <?php
 // Отправляем в ответ на запрос клиента заголовки,
 // разрешающие ответы кросс-доменные запросы
+header("Access-Control-Allow-Headers: Content-Type");
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
 // Если в цепочке параметров запроса присутствует параметр 'controller'

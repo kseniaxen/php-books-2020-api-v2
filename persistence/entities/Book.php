@@ -5,6 +5,8 @@ class Book {
   protected $id;
   // временная метка последнего обновления
   protected $updatedAt;
+  // индексированный идентификатор пользователя GoogleFireBase UserId
+  protected $userId;
   // заголовок
   protected $title;
   // автор
@@ -34,11 +36,13 @@ class Book {
     , $typeId
     , $image
     , $active
+    , $userId
     , $id = 0
     , $updatedAt = ''
     ) {
     $this->id = $id;
     $this->updatedAt = $updatedAt;
+    $this->userId = $userId;
     $this->title = $title;
     $this->author = $author;
     $this->genre = $genre;
@@ -55,7 +59,7 @@ class Book {
       // Получаем контекст для работы с БД
       $pdo = getDbContext();
       // Готовим sql-запрос добавления строки в таблицу "Книги"
-      $ps = $pdo->prepare("INSERT INTO `Books` (`title`, `author`, `genre`, `description`, `countryId`, `cityId`, `typeId`, `image`, `active`) VALUES (:title, :author, :genre, :description, :countryId, :cityId, :typeId, :image, :active)");
+      $ps = $pdo->prepare("INSERT INTO `Books` (`userId`, `title`, `author`, `genre`, `description`, `countryId`, `cityId`, `typeId`, `image`, `active`) VALUES (:userId, :title, :author, :genre, :description, :countryId, :cityId, :typeId, :image, :active)");
       // Превращаем объект в массив
       $ar = get_object_vars($this);
       // Удаляем из него первые два элемента - id и created_at, потому что их создаст СУБД
@@ -120,6 +124,9 @@ class Book {
         if (isset($args['lastId'])) {
           $whereClouse[] = "`b`.`id` < '{$args['lastId']}'";
         }
+        if (isset($args['userId'])) {
+          $whereClouse[] = "`b`.`userId` = '{$args['userId']}'";
+        }
         if (isset($args['active'])) {
           $whereClouse[] = "`b`.`active` = '{$args['active']}'";
         }
@@ -151,7 +158,7 @@ class Book {
         // с подключением связанных таблиц "Страна", "Город", "Тип",
         // сортируем по идентификаторам,
         // пытаемся получить только три значения из строк, идентификаторы которых меньше заданного
-        $ps = $pdo->prepare("SELECT `b`.`id`, `b`.`updatedAt`, `b`.`title`, `b`.`author`, `b`.`genre`, `b`.`description`, `co`.`name`, `ci`.`name`, `ty`.`name`, `b`.`image`, `b`.`active` FROM `Books` AS `b` INNER JOIN `Country` AS `co` ON (`b`.`countryId` = `co`.`id`) INNER JOIN `City` AS `ci` ON (`b`.`cityId` = `ci`.`id`) INNER JOIN `Type` AS `ty` ON (`b`.`typeId` = `ty`.`id`) {$whereClouseString} ORDER BY `b`.`id` DESC LIMIT 3");
+        $ps = $pdo->prepare("SELECT `b`.`id`, `b`.`updatedAt`, `b`.`userId`, `b`.`title`, `b`.`author`, `b`.`genre`, `b`.`description`, `co`.`name` AS 'country', `ci`.`name` AS 'city', `ty`.`name` AS 'type', `b`.`image`, `b`.`active` FROM `Books` AS `b` INNER JOIN `Country` AS `co` ON (`b`.`countryId` = `co`.`id`) INNER JOIN `City` AS `ci` ON (`b`.`cityId` = `ci`.`id`) INNER JOIN `Type` AS `ty` ON (`b`.`typeId` = `ty`.`id`) {$whereClouseString} ORDER BY `b`.`id` DESC LIMIT 3");
         // Выполняем
         $ps->execute();
         //Сохраняем полученные данные в ассоциативный массив
