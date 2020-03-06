@@ -18,14 +18,25 @@ class Country {
     try {
       // Получаем контекст для работы с БД
       $pdo = getDbContext();
-      // Готовим sql-запрос добавления строки в таблицу "Страна"
-      $ps = $pdo->prepare("INSERT INTO `Country` (`name`) VALUES (:name)");
       // Превращаем объект в массив
       $ar = get_object_vars($this);
       // Удаляем из него первый элемент - id потому что его создаст СУБД
       array_shift($ar);
-      // Выполняем запрос к БД для добавления записи
-      $ps->execute($ar);
+      // Если в БД еще нет страны с таким названием -
+      // сначала добавляем ее, иначе - сразу возвращаем данные о ней
+      $ps = $pdo->prepare("SELECT * FROM `Country` WHERE `name` = :name");
+      //Пытаемся выполнить запрос на получение данных
+      $resultCode = $ps->execute($ar);
+      if ($resultCode && ($row = $ps->fetch())) {
+        $this->id = $row['id'];
+      } else {
+        // Готовим sql-запрос добавления строки в таблицу "Страна"
+        $ps = $pdo->prepare("INSERT INTO `Country` (`name`) VALUES (:name)");
+        // Выполняем запрос к БД для добавления записи
+        $ps->execute($ar);
+        $this->id = $pdo->lastInsertId();
+      }
+      return get_object_vars($this);
     } catch (PDOException $e) {
       // Если произошла ошибка - возвращаем ее текст
       $err = $e->getMessage();
@@ -68,7 +79,7 @@ class Country {
       }
     }
   }
-  //Получение списка всех стран из БД
+  // Получение списка всех стран из БД
   static function getAll () {
     // Переменная для подготовленного запроса
     $ps = null;
@@ -79,6 +90,27 @@ class Country {
         $pdo = getDbContext();
         // пытаемся получить все записи и странах
         $ps = $pdo->prepare("SELECT * FROM `Country`");
+        // Выполняем
+        $ps->execute();
+        //Сохраняем полученные данные в ассоциативный массив
+        $countries = $ps->fetchAll();
+        return $countries;
+    } catch (PDOException $e) {
+        echo $e->getMessage();
+        return false;
+    }
+  }
+  // Получение списка стран из БД
+  static function filter($args) {
+    // Переменная для подготовленного запроса
+    $ps = null;
+    // Переменная для результата запроса
+    $countries = null;
+    try {
+        // Получаем контекст для работы с БД
+        $pdo = getDbContext();
+        // пытаемся получить все записи и странах
+        $ps = $pdo->prepare("SELECT * FROM `Country` WHERE `name` LIKE '{$args['startsWith']}%'");
         // Выполняем
         $ps->execute();
         //Сохраняем полученные данные в ассоциативный массив

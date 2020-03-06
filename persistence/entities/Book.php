@@ -67,6 +67,9 @@ class Book {
       array_shift($ar);
       // Выполняем запрос к БД для добавления записи
       $ps->execute($ar);
+      //
+      $this->id = $pdo->lastInsertId();
+      return get_object_vars($this);
     } catch (PDOException $e) {
       // Если произошла ошибка - возвращаем ее текст
       $err = $e->getMessage();

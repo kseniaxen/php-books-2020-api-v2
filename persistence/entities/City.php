@@ -22,14 +22,27 @@ class City {
     try {
       // Получаем контекст для работы с БД
       $pdo = getDbContext();
-      // Готовим sql-запрос добавления строки в таблицу "Город"
-      $ps = $pdo->prepare("INSERT INTO `City` (`name`, `country_id`) VALUES (:name, :countryId)");
       // Превращаем объект в массив
       $ar = get_object_vars($this);
       // Удаляем из него первый элемент - id потому что его создаст СУБД
       array_shift($ar);
-      // Выполняем запрос к БД для добавления записи
-      $ps->execute($ar);
+      // Если в БД еще нет города с таким названием -
+      // сначала добавляем его, иначе - сразу возвращаем данные о нем
+      $ps = $pdo->prepare("SELECT * FROM `City` WHERE `name` = :name AND `country_id` = :countryId");
+      //Пытаемся выполнить запрос на получение данных
+      $resultCode = $ps->execute($ar);
+      if ($resultCode && ($row = $ps->fetch())) {
+        $this->id = $row['id'];
+      } else {
+        // Готовим sql-запрос добавления строки в таблицу "Город"
+        $ps = $pdo->prepare("INSERT INTO `City` (`name`, `country_id`) VALUES (:name, :countryId)");
+        // Выполняем запрос к БД для добавления записи
+        $ps->execute($ar);
+        // Устанавливаем в поле id текущего объекта модели
+        // последний id, сгененрированный БД
+        $this->id = $pdo->lastInsertId();
+      }
+      return get_object_vars($this);
     } catch (PDOException $e) {
       // Если произошла ошибка - возвращаем ее текст
       $err = $e->getMessage();
@@ -73,7 +86,7 @@ class City {
     }
   }
   // Получение списка всех городов по идентификатору страны из БД
-  static function countrycities ($coutryId) {
+  static function filter ($args) {
     // Переменная для подготовленного запроса
     $ps = null;
     // Переменная для результата запроса
@@ -82,7 +95,7 @@ class City {
         // Получаем контекст для работы с БД
         $pdo = getDbContext();
         // Пытаемся получить значения из строк, идентификаторы стран в которых равны заданному
-        $ps = $pdo->prepare("SELECT * FROM `City` WHERE `country_id` = $coutryId");
+        $ps = $pdo->prepare("SELECT * FROM `City` WHERE `country_id` = '{$args['countryId']}' AND `name` LIKE '{$args['startsWith']}%'");
         // Выполняем
         $ps->execute();
         //Сохраняем полученные данные в ассоциативный массив
