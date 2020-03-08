@@ -133,17 +133,20 @@ class Book {
         if (isset($args['active'])) {
           $whereClouse[] = "`b`.`active` = '{$args['active']}'";
         }
-        if (isset($args['title'])) {
+        /* if (isset($args['title'])) {
           $whereClouse[] = "locate('{$args['title']}', `b`.`title`) > 0";
         }
         if (isset($args['author'])) {
           $whereClouse[] = "locate('{$args['author']}', `b`.`author`) > 0";
+        } */
+        if (isset($args['search']) && $args['search']) {
+          $whereClouse[] = "((locate('{$args['search']}', `b`.`title`) > 0) OR (locate('{$args['search']}', `b`.`author`) > 0))";
         }
-        if (isset($args['countryId'])) {
-          $whereClouse[] = "`b`.`countryId` = '{$args['countryId']}'";
+        if (isset($args['country']) && $args['country']->id) {
+          $whereClouse[] = "`b`.`countryId` = '{$args['country']->id}'";
         }
-        if (isset($args['cityId'])) {
-          $whereClouse[] = "`b`.`cityId` = '{$args['cityId']}'";
+        if (isset($args['city']) && $args['city']->id) {
+          $whereClouse[] = "`b`.`cityId` = '{$args['city']->id}'";
         }
         if (isset($args['typeId'])) {
           $whereClouse[] = "`b`.`typeId` = '{$args['typeId']}'";
@@ -162,6 +165,7 @@ class Book {
         // сортируем по идентификаторам,
         // пытаемся получить только три значения из строк, идентификаторы которых меньше заданного
         $ps = $pdo->prepare("SELECT `b`.`id`, `b`.`updatedAt`, `b`.`userId`, `b`.`title`, `b`.`author`, `b`.`genre`, `b`.`description`, `co`.`name` AS 'country', `ci`.`name` AS 'city', `ty`.`name` AS 'type', `b`.`image`, `b`.`active` FROM `Books` AS `b` INNER JOIN `Country` AS `co` ON (`b`.`countryId` = `co`.`id`) INNER JOIN `City` AS `ci` ON (`b`.`cityId` = `ci`.`id`) INNER JOIN `Type` AS `ty` ON (`b`.`typeId` = `ty`.`id`) {$whereClouseString} ORDER BY `b`.`id` DESC LIMIT 3");
+        // echo "SELECT `b`.`id`, `b`.`updatedAt`, `b`.`userId`, `b`.`title`, `b`.`author`, `b`.`genre`, `b`.`description`, `co`.`name` AS 'country', `ci`.`name` AS 'city', `ty`.`name` AS 'type', `b`.`image`, `b`.`active` FROM `Books` AS `b` INNER JOIN `Country` AS `co` ON (`b`.`countryId` = `co`.`id`) INNER JOIN `City` AS `ci` ON (`b`.`cityId` = `ci`.`id`) INNER JOIN `Type` AS `ty` ON (`b`.`typeId` = `ty`.`id`) {$whereClouseString} ORDER BY `b`.`id` DESC LIMIT 3";
         // Выполняем
         $ps->execute();
         //Сохраняем полученные данные в ассоциативный массив
