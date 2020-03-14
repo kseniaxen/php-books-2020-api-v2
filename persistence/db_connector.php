@@ -5,14 +5,14 @@ function getDbContext(){
   $pdo = false;
   /* Параметры соединения */
   // адрес сервера mysql
-  $host = "localhost:3306";
+  $host = "localhost:3306"; // localhost
   // имя пользователя БД
-  $user = "root";
+  $user = "root"; // id12898591_root
   // пароль пользователя БД
-  $pass = "root";
+  $pass = "root"; // Password2
   // имя БД
   // $dbname = "tyaamariupol";
-  $dbname = "books_as_a_gift";
+  $dbname = "books_as_a_gift"; // id12898591_books_as_a_gift
   // склеиваем строку соединения
   $cs = 'mysql:host=' . $host . ';dbname=' . $dbname . ';charset=utf8;';
   /* Параметры получения результата из БД */
