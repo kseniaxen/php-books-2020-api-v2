@@ -109,12 +109,17 @@ class Country {
     try {
         // Получаем контекст для работы с БД
         $pdo = getDbContext();
-        // пытаемся получить все записи и странах
-        $ps = $pdo->prepare("SELECT * FROM `Country` WHERE `name` LIKE '{$args['startsWith']}%'");
-        // Выполняем
-        $ps->execute();
-        //Сохраняем полученные данные в ассоциативный массив
-        $countries = $ps->fetchAll();
+        $countries = null;
+        if($args['startsWith'] !== ''){
+          // пытаемся получить все записи и странах
+          $ps = $pdo->prepare("SELECT * FROM `Country` WHERE `name` LIKE '{$args['startsWith']}%'");
+          // Выполняем
+          $ps->execute();
+          //Сохраняем полученные данные в ассоциативный массив
+          $countries = $ps->fetchAll();
+        } else {
+          $countries = [];
+        }
         return $countries;
     } catch (PDOException $e) {
         echo $e->getMessage();
