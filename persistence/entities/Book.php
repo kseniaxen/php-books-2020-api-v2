@@ -15,6 +15,10 @@ class Book {
   protected $author;
   // жанр (опционально)
   protected $genre;
+  // издатель (опционально)
+  protected $publisher;
+  // номер тома или выпуска (опционально)
+  protected $volumeOrIssue;
   // описание
   protected $description;
   // идентификатор страны предложения
@@ -23,6 +27,10 @@ class Book {
   protected $cityId;
   // идентификатор типа предложения
   protected $typeId;
+  // идентификатор языка
+  protected $languageId;
+  // год издания
+  protected $publicationDate;
   // изображение Base64 (опционально)
   protected $image;
   // активность (предложение доступно для запроса или по какой-либо причине скрыто от поиска)
@@ -32,10 +40,14 @@ class Book {
     $title
     , $author
     , $genre
+    , $publisher
+    , $volumeOrIssue
     , $description
     , $countryId
     , $cityId
     , $typeId
+    , $languageId
+    , $publicationDate
     , $image
     , $active
     , $userId
@@ -50,10 +62,14 @@ class Book {
     $this->title = $title;
     $this->author = $author;
     $this->genre = $genre;
+    $this->publisher = $publisher;
+    $this->volumeOrIssue = $volumeOrIssue;
     $this->description = $description;
     $this->countryId = $countryId;
     $this->cityId = $cityId;
     $this->typeId = $typeId;
+    $this->languageId = $languageId;
+    $this->publicationDate = $publicationDate;
     $this->image = $image;
     $this->active = $active;
   }
@@ -64,7 +80,7 @@ class Book {
       $pdo = getDbContext();
       // echo '$pdo' . $pdo;
       // Готовим sql-запрос добавления строки в таблицу "Книги"
-      $ps = $pdo->prepare("INSERT INTO `Books` (`userId`, `userEmail`, `title`, `author`, `genre`, `description`, `countryId`, `cityId`, `typeId`, `image`, `active`) VALUES (:userId, :userEmail, :title, :author, :genre, :description, :countryId, :cityId, :typeId, :image, :active)");
+      $ps = $pdo->prepare("INSERT INTO `Books` (`userId`, `userEmail`, `title`, `author`, `genre`, `publisher`, `volumeOrIssue`, `description`, `countryId`, `cityId`, `typeId`, `languageId`, `publicationDate`, `image`, `active`) VALUES (:userId, :userEmail, :title, :author, :genre, :publisher, :volumeOrIssue, :description, :countryId, :cityId, :typeId, :languageId, :publicationDate, :image, :active)");
       // Превращаем объект в массив
       $ar = get_object_vars($this);
       // Удаляем из него первые два элемента - id и created_at, потому что их создаст СУБД
@@ -75,7 +91,7 @@ class Book {
       $ps->execute($ar);
       //
       $this->id = $pdo->lastInsertId();
-      $ps = $pdo->prepare("SELECT `b`.`id`, `b`.`updatedAt`, `b`.`userId`, `b`.`userEmail`, `b`.`title`, `b`.`author`, `b`.`genre`, `b`.`description`, `co`.`name` AS 'country', `ci`.`name` AS 'city', `ty`.`id` AS 'type', `b`.`image`, `b`.`active` FROM `Books` AS `b` INNER JOIN `Country` AS `co` ON (`b`.`countryId` = `co`.`id`) INNER JOIN `City` AS `ci` ON (`b`.`cityId` = `ci`.`id`) INNER JOIN `Type` AS `ty` ON (`b`.`typeId` = `ty`.`id`) WHERE `b`.`id` = {$this->id}");
+      $ps = $pdo->prepare("SELECT `b`.`id`, `b`.`updatedAt`, `b`.`userId`, `b`.`userEmail`, `b`.`title`, `b`.`author`, `b`.`genre`, `b`.`publisher`, `b`.`volumeOrIssue`, `b`.`description`, `co`.`name` AS 'country', `ci`.`name` AS 'city', `ty`.`id` AS 'type', `lang`.`id` AS 'language', `b`.`publicationDate`, `b`.`image`, `b`.`active` FROM `Books` AS `b` INNER JOIN `Country` AS `co` ON (`b`.`countryId` = `co`.`id`) INNER JOIN `City` AS `ci` ON (`b`.`cityId` = `ci`.`id`) INNER JOIN `Type` AS `ty` ON (`b`.`typeId` = `ty`.`id`) INNER JOIN `Languages` AS `lang` ON (`b`.`languageId` = `lang`.`id`) WHERE `b`.`id` = {$this->id}");
       return ($ps->execute() && ($row = $ps->fetch())) ? $row : null;
     } catch (PDOException $e) {
       // Если произошла ошибка - возвращаем ее текст
@@ -158,6 +174,7 @@ class Book {
         if (isset($args['typeId'])) {
           $whereClouse[] = "`b`.`typeId` = '{$args['typeId']}'";
         }
+        // TODO publisher, volumeOrIssue, languageId n publicationDate filter n order
         $whereClouseString = 'WHERE ';
         $expressionCount = 0;
         foreach ($whereClouse as $expression) {
@@ -168,10 +185,10 @@ class Book {
           }
         }
         // Готовим sql-запрос чтения всех строк данных из таблицы "Книги"
-        // с подключением связанных таблиц "Страна", "Город", "Тип",
+        // с подключением связанных таблиц "Страна", "Город", "Тип", "Язык"
         // сортируем по идентификаторам,
         // пытаемся получить только три значения из строк, идентификаторы которых меньше заданного
-        $ps = $pdo->prepare("SELECT `b`.`id`, `b`.`updatedAt`, `b`.`userId`, `b`.`userEmail`, `b`.`title`, `b`.`author`, `b`.`genre`, `b`.`description`, `co`.`name` AS 'country', `ci`.`name` AS 'city', `ty`.`id` AS 'type', `b`.`image`, `b`.`active` FROM `Books` AS `b` INNER JOIN `Country` AS `co` ON (`b`.`countryId` = `co`.`id`) INNER JOIN `City` AS `ci` ON (`b`.`cityId` = `ci`.`id`) INNER JOIN `Type` AS `ty` ON (`b`.`typeId` = `ty`.`id`) {$whereClouseString} ORDER BY `b`.`id` DESC LIMIT 2");
+        $ps = $pdo->prepare("SELECT `b`.`id`, `b`.`updatedAt`, `b`.`userId`, `b`.`userEmail`, `b`.`title`, `b`.`author`, `b`.`genre`, `b`.`publisher`, `b`.`volumeOrIssue`, `b`.`description`, `co`.`name` AS 'country', `ci`.`name` AS 'city', `ty`.`id` AS 'type', `lang`.`id` AS 'language', `b`.`publicationDate`, `b`.`image`, `b`.`active` FROM `Books` AS `b` INNER JOIN `Country` AS `co` ON (`b`.`countryId` = `co`.`id`) INNER JOIN `City` AS `ci` ON (`b`.`cityId` = `ci`.`id`) INNER JOIN `Type` AS `ty` ON (`b`.`typeId` = `ty`.`id`) INNER JOIN `Languages` AS `lang` ON (`b`.`languageId` = `lang`.`id`) {$whereClouseString} ORDER BY `b`.`id` DESC LIMIT 2");
         // echo "SELECT `b`.`id`, `b`.`updatedAt`, `b`.`userId`, `b`.`title`, `b`.`author`, `b`.`genre`, `b`.`description`, `co`.`name` AS 'country', `ci`.`name` AS 'city', `ty`.`name` AS 'type', `b`.`image`, `b`.`active` FROM `Books` AS `b` INNER JOIN `Country` AS `co` ON (`b`.`countryId` = `co`.`id`) INNER JOIN `City` AS `ci` ON (`b`.`cityId` = `ci`.`id`) INNER JOIN `Type` AS `ty` ON (`b`.`typeId` = `ty`.`id`) {$whereClouseString} ORDER BY `b`.`id` DESC LIMIT 3";
         // Выполняем
         $ps->execute();
