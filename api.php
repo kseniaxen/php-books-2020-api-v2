@@ -51,6 +51,8 @@ if (isset($_REQUEST['controller'])) {
 	} catch (Exception $e) {
     $response->status = "error";
     $response->message = $e->getMessage();
+  } finally {
+    // 
   }
   // Отправляем в браузер то, что получилось в переменной ответа
   // (данные / сообщение об успешном выполнении / об ошибке).

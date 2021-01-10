@@ -28,14 +28,14 @@ class City {
       array_shift($ar);
       // Если в БД еще нет города с таким названием -
       // сначала добавляем его, иначе - сразу возвращаем данные о нем
-      $ps = $pdo->prepare("SELECT * FROM `City` WHERE `name` = :name AND `country_id` = :countryId");
+      $ps = $pdo->prepare("SELECT * FROM `City` WHERE `name` = :name AND `countryId` = :countryId");
       //Пытаемся выполнить запрос на получение данных
       $resultCode = $ps->execute($ar);
       if ($resultCode && ($row = $ps->fetch())) {
         $this->id = $row['id'];
       } else {
         // Готовим sql-запрос добавления строки в таблицу "Город"
-        $ps = $pdo->prepare("INSERT INTO `City` (`name`, `country_id`) VALUES (:name, :countryId)");
+        $ps = $pdo->prepare("INSERT INTO `City` (`name`, `countryId`) VALUES (:name, :countryId)");
         // Выполняем запрос к БД для добавления записи
         $ps->execute($ar);
         // Устанавливаем в поле id текущего объекта модели
@@ -95,7 +95,7 @@ class City {
         // Получаем контекст для работы с БД
         $pdo = getDbContext();
         // Пытаемся получить значения из строк, идентификаторы стран в которых равны заданному
-        $ps = $pdo->prepare("SELECT * FROM `City` WHERE `country_id` = '{$args['countryId']}' AND `name` LIKE '{$args['startsWith']}%'");
+        $ps = $pdo->prepare("SELECT * FROM `City` WHERE `countryId` = '{$args['countryId']}' AND `name` LIKE '{$args['startsWith']}%'");
         // Выполняем
         $ps->execute();
         //Сохраняем полученные данные в ассоциативный массив
