@@ -1,15 +1,13 @@
 -- phpMyAdmin SQL Dump
--- version 4.7.7
+-- version 4.6.6deb5ubuntu0.5
 -- https://www.phpmyadmin.net/
 --
--- Хост: 127.0.0.1:3306
--- Время создания: Дек 01 2020 г., 12:43
--- Версия сервера: 5.7.20
--- Версия PHP: 7.2.0
+-- Host: localhost:3306
+-- Generation Time: Jan 10, 2021 at 08:06 PM
+-- Server version: 5.7.32-0ubuntu0.18.04.1
+-- PHP Version: 7.2.24-0ubuntu0.18.04.7
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
-SET AUTOCOMMIT = 0;
-START TRANSACTION;
 SET time_zone = "+00:00";
 
 
@@ -19,13 +17,13 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- База данных: `books_as_a_gift`
+-- Database: `books_as_a_gift`
 --
 
 -- --------------------------------------------------------
 
 --
--- Структура таблицы `Books`
+-- Table structure for table `Books`
 --
 
 CREATE TABLE `Books` (
@@ -35,9 +33,11 @@ CREATE TABLE `Books` (
   `title` varchar(50) NOT NULL,
   `author` varchar(50) NOT NULL,
   `genre` varchar(50) DEFAULT NULL,
-  `languageId` int(11) NOT NULL,
-  `publication_date` year(4) DEFAULT NULL,
-  `description` varchar(100) NOT NULL,
+  `publisher` varchar(255) DEFAULT NULL,
+  `volumeOrIssue` varchar(25) DEFAULT NULL,
+  `language` varchar(25) NOT NULL,
+  `publicationDate` varchar(5) DEFAULT NULL,
+  `description` varchar(512) DEFAULT NULL,
   `countryId` int(11) NOT NULL,
   `cityId` int(11) NOT NULL,
   `typeId` int(11) NOT NULL,
@@ -49,20 +49,20 @@ CREATE TABLE `Books` (
 -- --------------------------------------------------------
 
 --
--- Структура таблицы `City`
+-- Table structure for table `City`
 --
 
 CREATE TABLE `City` (
   `id` int(11) NOT NULL,
   `name` varchar(50) NOT NULL,
-  `country_id` int(11) NOT NULL
+  `countryId` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
--- Дамп данных таблицы `City`
+-- Dumping data for table `City`
 --
 
-INSERT INTO `City` (`id`, `name`, `country_id`) VALUES
+INSERT INTO `City` (`id`, `name`, `countryId`) VALUES
 (1, 'Мариуполь', 1),
 (2, 'Москва', 2),
 (3, 'Киев', 1),
@@ -73,12 +73,14 @@ INSERT INTO `City` (`id`, `name`, `country_id`) VALUES
 (8, 'Детройт', 4),
 (9, 'Нью-Йорк', 4),
 (10, 'Лондон', 6),
-(11, 'Бристоль', 6);
+(11, 'Бристоль', 6),
+(14, 'Ташкент', 7),
+(15, 'Париж', 8);
 
 -- --------------------------------------------------------
 
 --
--- Структура таблицы `Country`
+-- Table structure for table `Country`
 --
 
 CREATE TABLE `Country` (
@@ -87,7 +89,7 @@ CREATE TABLE `Country` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
--- Дамп данных таблицы `Country`
+-- Dumping data for table `Country`
 --
 
 INSERT INTO `Country` (`id`, `name`) VALUES
@@ -97,37 +99,46 @@ INSERT INTO `Country` (`id`, `name`) VALUES
 (4, 'США'),
 (5, 'Япония'),
 (6, 'Великобритания'),
-(7, 'Узбекистан');
+(7, 'Узбекистан'),
+(8, 'Франция');
 
 -- --------------------------------------------------------
 
 --
--- Структура таблицы `Language`
+-- Table structure for table `Languages`
 --
 
-CREATE TABLE `Language` (
+CREATE TABLE `Languages` (
   `id` int(11) NOT NULL,
   `name` varchar(25) NOT NULL,
   `priority` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+--
+-- Dumping data for table `Languages`
+--
+
+INSERT INTO `Languages` (`id`, `name`, `priority`) VALUES
+(1, 'English', 1),
+(2, 'Русский', 2);
+
 -- --------------------------------------------------------
 
 --
--- Структура таблицы `Requests`
+-- Table structure for table `Requests`
 --
 
 CREATE TABLE `Requests` (
   `id` int(11) NOT NULL,
-  `book_id` int(11) NOT NULL,
-  `user_email` varchar(50) NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+  `bookId` int(11) NOT NULL,
+  `userEmail` varchar(50) NOT NULL,
+  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
 
 --
--- Структура таблицы `Type`
+-- Table structure for table `Type`
 --
 
 CREATE TABLE `Type` (
@@ -136,7 +147,7 @@ CREATE TABLE `Type` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
--- Дамп данных таблицы `Type`
+-- Dumping data for table `Type`
 --
 
 INSERT INTO `Type` (`id`, `name`) VALUES
@@ -145,11 +156,11 @@ INSERT INTO `Type` (`id`, `name`) VALUES
 (3, 'личная');
 
 --
--- Индексы сохранённых таблиц
+-- Indexes for dumped tables
 --
 
 --
--- Индексы таблицы `Books`
+-- Indexes for table `Books`
 --
 ALTER TABLE `Books`
   ADD PRIMARY KEY (`id`),
@@ -157,105 +168,97 @@ ALTER TABLE `Books`
   ADD KEY `cityId` (`cityId`),
   ADD KEY `typeId` (`typeId`),
   ADD KEY `user_id_idx` (`userId`),
-  ADD KEY `Books_ibfk_4` (`languageId`);
+  ADD KEY `Books_ibfk_4` (`language`);
 
 --
--- Индексы таблицы `City`
+-- Indexes for table `City`
 --
 ALTER TABLE `City`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `country_id` (`country_id`);
+  ADD KEY `country_id` (`countryId`);
 
 --
--- Индексы таблицы `Country`
+-- Indexes for table `Country`
 --
 ALTER TABLE `Country`
   ADD PRIMARY KEY (`id`);
 
 --
--- Индексы таблицы `Language`
+-- Indexes for table `Languages`
 --
-ALTER TABLE `Language`
+ALTER TABLE `Languages`
   ADD PRIMARY KEY (`id`);
 
 --
--- Индексы таблицы `Requests`
+-- Indexes for table `Requests`
 --
 ALTER TABLE `Requests`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `book_id` (`book_id`);
+  ADD KEY `book_id` (`bookId`);
 
 --
--- Индексы таблицы `Type`
+-- Indexes for table `Type`
 --
 ALTER TABLE `Type`
   ADD PRIMARY KEY (`id`);
 
 --
--- AUTO_INCREMENT для сохранённых таблиц
+-- AUTO_INCREMENT for dumped tables
 --
 
 --
--- AUTO_INCREMENT для таблицы `Books`
+-- AUTO_INCREMENT for table `Books`
 --
 ALTER TABLE `Books`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 --
--- AUTO_INCREMENT для таблицы `City`
+-- AUTO_INCREMENT for table `City`
 --
 ALTER TABLE `City`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
-
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 --
--- AUTO_INCREMENT для таблицы `Country`
+-- AUTO_INCREMENT for table `Country`
 --
 ALTER TABLE `Country`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
-
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 --
--- AUTO_INCREMENT для таблицы `Language`
+-- AUTO_INCREMENT for table `Languages`
 --
-ALTER TABLE `Language`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
+ALTER TABLE `Languages`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 --
--- AUTO_INCREMENT для таблицы `Requests`
+-- AUTO_INCREMENT for table `Requests`
 --
 ALTER TABLE `Requests`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
 --
--- AUTO_INCREMENT для таблицы `Type`
+-- AUTO_INCREMENT for table `Type`
 --
 ALTER TABLE `Type`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+--
+-- Constraints for dumped tables
+--
 
 --
--- Ограничения внешнего ключа сохраненных таблиц
---
-
---
--- Ограничения внешнего ключа таблицы `Books`
+-- Constraints for table `Books`
 --
 ALTER TABLE `Books`
   ADD CONSTRAINT `Books_ibfk_1` FOREIGN KEY (`countryId`) REFERENCES `Country` (`id`),
   ADD CONSTRAINT `Books_ibfk_2` FOREIGN KEY (`cityId`) REFERENCES `City` (`id`),
-  ADD CONSTRAINT `Books_ibfk_3` FOREIGN KEY (`typeId`) REFERENCES `Type` (`id`),
-  ADD CONSTRAINT `Books_ibfk_4` FOREIGN KEY (`languageId`) REFERENCES `Language` (`id`);
+  ADD CONSTRAINT `Books_ibfk_3` FOREIGN KEY (`typeId`) REFERENCES `Type` (`id`);
 
 --
--- Ограничения внешнего ключа таблицы `City`
+-- Constraints for table `City`
 --
 ALTER TABLE `City`
-  ADD CONSTRAINT `City_ibfk_1` FOREIGN KEY (`country_id`) REFERENCES `Country` (`id`);
+  ADD CONSTRAINT `City_ibfk_1` FOREIGN KEY (`countryId`) REFERENCES `Country` (`id`);
 
 --
--- Ограничения внешнего ключа таблицы `Requests`
+-- Constraints for table `Requests`
 --
 ALTER TABLE `Requests`
-  ADD CONSTRAINT `Requests_ibfk_1` FOREIGN KEY (`book_id`) REFERENCES `Books` (`id`);
-COMMIT;
+  ADD CONSTRAINT `Requests_ibfk_1` FOREIGN KEY (`bookId`) REFERENCES `Books` (`id`);
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
