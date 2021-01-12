@@ -89,4 +89,30 @@ class Type {
         return false;
     }
   }
+   // Получение списка типов из БД
+   static function filter($args) {
+    // Переменная для подготовленного запроса
+    $ps = null;
+    // Переменная для результата запроса
+    $types = null;
+    try {
+        // Получаем контекст для работы с БД
+        $pdo = getDbContext();
+        $types = null;
+        // if($args['startsWith'] !== ''){
+          // пытаемся получить все записи и странах
+          $ps = $pdo->prepare("SELECT * FROM `Type` WHERE `id` != 3");
+          // Выполняем
+          $ps->execute();
+          //Сохраняем полученные данные в ассоциативный массив
+          $types = $ps->fetchAll();
+        // } else {
+        //   $countries = [];
+        // }
+        return $types;
+    } catch (PDOException $e) {
+        echo $e->getMessage();
+        return false;
+    }
+  }
 }
